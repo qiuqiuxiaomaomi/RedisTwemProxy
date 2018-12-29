@@ -62,3 +62,46 @@ Twemproxy代理机制的特点：
 ###集群部署架构
 
 ![](https://i.imgur.com/q1sDZDa.png)
+
+<pre>
+TwemProxy缺点：
+
+      Twem是这些年来，应用范围最广，稳定性最高，最久经考验的分布式中间件。
+
+      但是TwemProxy最大的痛点在于，无法平滑的扩容/缩容
+          这样导致运维人员非常痛苦：业务量突增，需要增加Redis服务器，业务量萎缩，需要减少Redis
+      服务器，但对于Twemproxy而言，基本很难做到。
+
+          或者说Twemproxy更加像服务器静态sharding，有时为了避免业务量突增导致的扩容需求，甚至
+      被迫新开一个基于Twemproxy的Redis集群。
+
+          Twemproxy的另一个痛点是，运维不够友好，甚至没有控制面板
+</pre>
+
+
+###Redis Cluster集群模式
+
+
+###Codis
+
+![](https://i.imgur.com/wsd4hZw.png)
+
+<pre>
+Codis
+   
+      Codis刚好击中Twemproxy的这两大痛点，并且提供诸多其他令人激赏的特性。
+
+      Codis引入了Group的概念，每个Group包括1个Redis Master及至少1个Redis Slave，这是
+      和Twemproxy的区别之一。这样做的好处是，如果当前Master有问题，则运维人员可通过Dashboard
+      “自助式”切换到Slave，而不需要小心翼翼地修改程序配置文.
+
+      为支持数据热迁移（Auto Rebalance），出品方修改了Redis Server源码，并称之为Codis Server。
+  
+      Codis采用预先分片（Pre-Sharding）机制，事先规定好了，分成1024个slots（也就是说，最多能
+      支持后端1024个Codis Server），这些路由信息保存在ZooKeeper中。
+
+      ZooKeeper还维护Codis Server Group信息，并提供分布式锁等服务。
+
+      Codis目前仍被精益求精地改进中。其性能，从最初的比Twemproxy慢20%（虽然这对于内存型应用而
+      言，并不明显），到现在远远超过Twemproxy性能（一定条件下）
+</pre>
